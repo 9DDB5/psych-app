@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Alert, Platform,
+  TextInput, Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useAppContext } from '@/context/AppContext';
-import { Template, TemplateSection } from '@/types';
-import { generateId } from '@/utils/generateId';
+import { Template } from '@/types';
 
 export default function TemplateDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -64,7 +63,6 @@ export default function TemplateDetailScreen() {
       ),
     }));
     setNewItemText('');
-    setAddingItemSection(null);
   }
 
   function updateName(name: string) {
@@ -105,19 +103,21 @@ export default function TemplateDetailScreen() {
             <View style={[styles.itemsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.chips}>
                 {section.items.map(item => (
-                  <TouchableOpacity
+                  <View
                     key={item}
                     style={[styles.editChip, { backgroundColor: colors.muted, borderColor: colors.border }]}
-                    onLongPress={() => Alert.alert('Elimina voce', `Eliminare "${item}"?`, [
-                      { text: 'Annulla', style: 'cancel' },
-                      { text: 'Elimina', style: 'destructive', onPress: () => removeItem(section.id, item) },
-                    ])}
-                    onPress={() => {}}
-                    activeOpacity={0.7}
                   >
                     <Text style={[styles.chipText, { color: colors.foreground }]}>{item}</Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => removeItem(section.id, item)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                      style={styles.removeBtn}
+                    >
+                      <Feather name="x" size={12} color={colors.mutedForeground} />
+                    </TouchableOpacity>
+                  </View>
                 ))}
+
                 {addingItemSection === section.id ? (
                   <View style={[styles.addChip, { borderColor: section.bgColor }]}>
                     <TextInput
@@ -151,10 +151,6 @@ export default function TemplateDetailScreen() {
             </View>
           </View>
         ))}
-
-        <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-          Tieni premuto su una voce per eliminarla
-        </Text>
       </ScrollView>
     </View>
   );
@@ -173,8 +169,26 @@ const styles = StyleSheet.create({
   sectionCount: { fontSize: 12, fontFamily: 'Inter_500Medium' },
   itemsContainer: { padding: 10 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  editChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1, margin: 2 },
+  editChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingLeft: 10,
+    paddingRight: 6,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    margin: 2,
+  },
   chipText: { fontSize: 13, fontFamily: 'Inter_400Regular' },
+  removeBtn: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
   addChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, margin: 2,
@@ -186,5 +200,4 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed', margin: 2,
   },
   addBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  hint: { fontSize: 12, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 });

@@ -1,6 +1,12 @@
 import { Template } from '@/types';
 import { generateId } from '@/utils/generateId';
 
+function split(items: string[]): string[] {
+  return items.flatMap(item =>
+    item.split(' - ').map(s => s.trim()).filter(s => s.length > 0)
+  );
+}
+
 export function createDefaultTemplate(): Template {
   const s1id = generateId();
   const s2id = generateId();
@@ -29,7 +35,7 @@ export function createDefaultTemplate(): Template {
         title: 'Evento vissuto come...',
         color: '#FFFFFF',
         bgColor: '#1A237E',
-        items: [
+        items: split([
           'Minaccia', 'Agguato', 'Trappola', 'Angoscia', 'Conflitto', 'Costrizione', 'Violenza', 'Tragedia', 'Trauma',
           'Rischio', 'Pericolo', 'Danno', 'Perdita', 'Rinuncia', 'Necessità - Bisogno', 'Mancanza', 'Crisi', 'Distruzione', 'Dipendenza', 'Rovina',
           'Tradimento di aspettativa', 'Cambiamento', 'Instabilità', 'Contrarietà', 'Forzatura - Obbligo', 'Inganno', 'Perfidia', 'Ignoranza - Ottusità', 'Arroganza', 'Manipolazione', 'Errore',
@@ -37,20 +43,20 @@ export function createDefaultTemplate(): Template {
           'Dolore', 'Ferita', 'Punizione', 'Rifiuto', 'Esclusione', 'Solitudine', 'Abbandono', 'Fine', 'Morte',
           'Ingiustizia', 'Sopruso', 'Ricatto', 'Pretesa', 'Offesa', 'Umiliazione', 'Derisione', 'Accusa', 'Vergogna', 'Colpa', 'Ipocrisia',
           'Speranza - Aspettativa', 'Curiosità - Meraviglia', 'Fortuna - Opportunità', 'Desiderio', 'Gratificazione', 'Piacere', 'Sollievo', 'Vittoria', 'Appagamento', 'Riconoscimento', 'Accettazione - Accoglienza', 'Onnipotenza',
-        ],
+        ]),
       },
       {
         id: s3id,
         title: 'Caratteristiche della situazione / esperienza / realtà',
         color: '#FFFFFF',
         bgColor: '#880E4F',
-        items: [
+        items: split([
           'Inaspettata - Imprevista - Imprevedibile', 'Improvvisa', 'Inevitabile - Inarrestabile', 'Ingestibile',
           'Invivibile - Insupportabile - Inaffrontabile', 'Indesiderata - Indesiderabile',
           'Dura - Faticosa - Difficile', 'Stressante', 'Condizionante',
           'Irrimediabile - Irreversibile', 'Insormontabile - Soverchiante - Limitante',
-          'Soffocante - Annientante - Fagocitante', 'Incontrollabile - Su cui non ho potere',
-          'Caotica - Confusa', 'Troppo grande per me - Fuori misura',
+          'Soffocante - Annientante - Fagocitante', 'Incontrollabile', 'Su cui non ho potere',
+          'Caotica - Confusa', 'Troppo grande per me', 'Fuori misura',
           'Nuova - Ignota - Sconosciuta', 'Sconvolgente - Sottosopra',
           'Spaventosa - Minacciosa - Pericolosa', 'Paralizzante - Bloccante',
           'Agghiacciante - Mostruosa', 'Dolorosa', 'Vissuta in silenzio', 'Mortale',
@@ -65,7 +71,7 @@ export function createDefaultTemplate(): Template {
           'Imperdonabile', 'Inaccettabile', 'Crudele', 'Sbagliata',
           'Iniqua - Ingenerosa', 'Sleale', 'Stupida', 'Arretrata', 'Immatura',
           'Non amorevole', 'Disumana', 'Innaturale', 'Amorale',
-        ],
+        ]),
       },
     ],
   };

@@ -110,6 +110,19 @@ export default function NewSessionScreen() {
           </View>
         )}
 
+        <View style={styles.freezingSection}>
+          <Text style={[styles.freezingLabel, { color: colors.foreground }]}>Frase "Freezing" (per...)</Text>
+          <TextInput
+            style={[styles.freezingInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+            placeholder="Inserisci la frase del paziente..."
+            placeholderTextColor={colors.mutedForeground}
+            value={freezingText}
+            onChangeText={setFreezingText}
+            multiline
+            textAlignVertical="top"
+          />
+        </View>
+
         {template.sections.map(section => {
           const sectionSel = selections.find(s => s.sectionId === section.id);
           const selectedItems = sectionSel?.items ?? [];
@@ -153,19 +166,6 @@ export default function NewSessionScreen() {
             </View>
           );
         })}
-
-        <View style={styles.freezingSection}>
-          <Text style={[styles.freezingLabel, { color: colors.foreground }]}>Frase "Freezing" (per...)</Text>
-          <TextInput
-            style={[styles.freezingInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-            placeholder="Inserisci la frase del paziente..."
-            placeholderTextColor={colors.mutedForeground}
-            value={freezingText}
-            onChangeText={setFreezingText}
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
       </ScrollView>
 
       <View style={[styles.footer, {
@@ -205,6 +205,9 @@ const styles = StyleSheet.create({
   templateRow: { gap: 8, paddingHorizontal: 2 },
   templateChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
   templateChipText: { fontSize: 14, fontFamily: 'Inter_500Medium' },
+  freezingSection: { gap: 8 },
+  freezingLabel: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  freezingInput: { borderWidth: 1, borderRadius: 12, padding: 14, minHeight: 90, fontSize: 15, fontFamily: 'Inter_400Regular' },
   section: { gap: 0, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: '#e5e7eb' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', flex: 1 },
@@ -213,9 +216,6 @@ const styles = StyleSheet.create({
   selectionText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
   itemsWrap: { padding: 10 },
   chips: { flexDirection: 'row', flexWrap: 'wrap' },
-  freezingSection: { gap: 8, marginTop: 4 },
-  freezingLabel: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  freezingInput: { borderWidth: 1, borderRadius: 12, padding: 14, minHeight: 90, fontSize: 15, fontFamily: 'Inter_400Regular' },
   footer: { padding: 16, paddingTop: 12, borderTopWidth: 1 },
   completeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 14, paddingVertical: 16 },
   completeBtnText: { color: '#fff', fontSize: 17, fontFamily: 'Inter_700Bold' },

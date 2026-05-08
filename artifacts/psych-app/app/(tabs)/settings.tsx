@@ -4,7 +4,8 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useAppContext } from '@/context/AppContext';
-import { exportAllData, exportTemplates } from '@/utils/export';
+import { exportAllData, exportTemplates, importFromFile } from '@/utils/export';
+import { createDefaultTemplate } from '@/utils/defaultTemplate';
 
 function SettingRow({
   icon, label, sub, onPress, danger,
@@ -37,7 +38,7 @@ function SettingRow({
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { patients, templates, sessions } = useAppContext();
+  const { patients, templates, sessions, updateTemplate, addTemplate, importData } = useAppContext();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
   async function handleExportAll() {
@@ -56,10 +57,54 @@ export default function SettingsScreen() {
     }
   }
 
+  async function handleImport() {
+    try {
+      const data = await importFromFile();
+      if (!data) return;
+
+      const pCount = data.patients?.length ?? 0;
+      const tCount = data.templates?.length ?? 0;
+      const sCount = data.sessions?.length ?? 0;
+
+      Alert.alert(
+        'Importa dati',
+        `Trovati:\n• ${pCount} pazienti\n• ${tCount} template\n• ${sCount} sedute\n\nI dati verranno aggiunti a quelli esistenti (no duplicati).`,
+        [
+          { text: 'Annulla', style: 'cancel' },
+          {
+            text: 'Importa', onPress: () => {
+              importData(data);
+              Alert.alert('Importazione completata', 'I dati sono stati importati con successo.');
+            },
+          },
+        ]
+      );
+    } catch (e) {
+      Alert.alert('Errore', 'File non valido o corrotto. Assicurati di selezionare un backup di PsychSession.');
+    }
+  }
+
+  function handleResetDefaultTemplate() {
+    Alert.alert(
+      'Ripristina template standard',
+      'Verrà aggiunto un nuovo "Template Standard" con le voci aggiornate. I template esistenti non verranno eliminati.',
+      [
+        { text: 'Annulla', style: 'cancel' },
+        {
+          text: 'Ripristina', onPress: () => {
+            const fresh = createDefaultTemplate();
+            addTemplate(fresh.name);
+            Alert.alert('Fatto', 'Template standard aggiunto con le voci aggiornate.');
+          },
+        },
+      ]
+    );
+  }
+
   function handleICloud() {
     Alert.alert(
       'Sincronizzazione iCloud',
-      'La sincronizzazione iCloud sarà disponibile nella versione pubblicata dell\'app sull\'App Store. Puoi usare l\'esportazione manuale come backup nel frattempo.',
+      'La sincronizzazione iCloud sarà disponibile nella versione pubblicata dell\'app sull\'App Store. Usa l\'esportazione/importazione manuale come backup nel frattempo.',
       [{ text: 'OK' }]
     );
   }
@@ -75,6 +120,12 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Backup ed esportazione</Text>
+        <SettingRow
+          icon="upload"
+          label="Importa da file"
+          sub="Importa backup .json di PsychSession"
+          onPress={handleImport}
+        />
         <SettingRow
           icon="download"
           label="Esporta tutto"
@@ -92,6 +143,14 @@ export default function SettingsScreen() {
           label="Sincronizzazione iCloud"
           sub="Disponibile nella versione App Store"
           onPress={handleICloud}
+        />
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 24 }]}>Template</Text>
+        <SettingRow
+          icon="refresh-cw"
+          label="Ripristina template standard"
+          sub="Aggiunge il template predefinito con le voci aggiornate"
+          onPress={handleResetDefaultTemplate}
         />
 
         <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 24 }]}>Riepilogo dati</Text>
