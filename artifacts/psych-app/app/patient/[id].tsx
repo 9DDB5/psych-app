@@ -10,13 +10,17 @@ import { useColors } from '@/hooks/useColors';
 import { useAppContext } from '@/context/AppContext';
 import { SessionCard } from '@/components/SessionCard';
 import { EmptyState } from '@/components/EmptyState';
+import { exportPatient } from '@/utils/export';
 
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { patients, templates, getPatientSessions, updatePatient, deletePatient } = useAppContext();
+  const {
+    patients, templates, sessions: allSessions,
+    getPatientSessions, updatePatient, deletePatient,
+  } = useAppContext();
 
   const patient = patients.find(p => p.id === id);
   const sessions = getPatientSessions(id);
@@ -52,6 +56,15 @@ export default function PatientDetailScreen() {
     ]);
   }
 
+  async function handleExport() {
+    try {
+      await exportPatient(patient!, allSessions, templates);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      Alert.alert('Esportazione fallita', msg);
+    }
+  }
+
   function startSession() {
     if (templates.length === 0) {
       Alert.alert('Nessun template', 'Crea prima un template nella sezione Template.');
@@ -67,7 +80,13 @@ export default function PatientDetailScreen() {
           title: patient.name,
           headerRight: () => (
             <View style={styles.headerActions}>
-              <TouchableOpacity onPress={() => { setEditName(patient.name); setEditNotes(patient.notes); setEditModal(true); }} style={styles.headerBtn}>
+              <TouchableOpacity onPress={handleExport} style={styles.headerBtn}>
+                <Feather name="share" size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => { setEditName(patient.name); setEditNotes(patient.notes); setEditModal(true); }}
+                style={styles.headerBtn}
+              >
                 <Feather name="edit-2" size={20} color={colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete} style={styles.headerBtn}>
@@ -78,7 +97,10 @@ export default function PatientDetailScreen() {
         }}
       />
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 20 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 20 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {patient.notes ? (
           <View style={[styles.notesBox, { backgroundColor: colors.muted, borderColor: colors.border }]}>
             <Text style={[styles.notesText, { color: colors.mutedForeground }]}>{patient.notes}</Text>
@@ -96,7 +118,11 @@ export default function PatientDetailScreen() {
         </View>
 
         {sessions.length === 0 ? (
-          <EmptyState icon="clipboard" title="Nessuna seduta" subtitle="Avvia una nuova seduta per registrare le selezioni del paziente" />
+          <EmptyState
+            icon="clipboard"
+            title="Nessuna seduta"
+            subtitle="Avvia una nuova seduta per registrare le selezioni del paziente"
+          />
         ) : (
           sessions.map(session => (
             <SessionCard
@@ -108,7 +134,12 @@ export default function PatientDetailScreen() {
         )}
       </ScrollView>
 
-      <Modal visible={editModal} animationType="slide" presentationStyle="formSheet" onRequestClose={() => setEditModal(false)}>
+      <Modal
+        visible={editModal}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setEditModal(false)}
+      >
         <View style={[styles.modal, { backgroundColor: colors.background }]}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border, paddingTop: insets.top + 16 }]}>
             <TouchableOpacity onPress={() => setEditModal(false)}>

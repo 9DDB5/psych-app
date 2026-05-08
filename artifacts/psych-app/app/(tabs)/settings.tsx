@@ -38,23 +38,24 @@ function SettingRow({
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { patients, templates, sessions, updateTemplate, addTemplate, importData } = useAppContext();
+  const { patients, templates, sessions, addTemplate, importData } = useAppContext();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+
+  function showError(e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    Alert.alert('Esportazione fallita', msg);
+  }
 
   async function handleExportAll() {
     try {
       await exportAllData(patients, templates, sessions);
-    } catch {
-      Alert.alert('Errore', 'Esportazione fallita. Riprova.');
-    }
+    } catch (e) { showError(e); }
   }
 
   async function handleExportTemplates() {
     try {
       await exportTemplates(templates);
-    } catch {
-      Alert.alert('Errore', 'Esportazione fallita. Riprova.');
-    }
+    } catch (e) { showError(e); }
   }
 
   async function handleImport() {
@@ -68,33 +69,33 @@ export default function SettingsScreen() {
 
       Alert.alert(
         'Importa dati',
-        `Trovati:\n• ${pCount} pazienti\n• ${tCount} template\n• ${sCount} sedute\n\nI dati verranno aggiunti a quelli esistenti (no duplicati).`,
+        `Trovati:\n• ${pCount} pazienti\n• ${tCount} template\n• ${sCount} sedute\n\nVerranno aggiunti a quelli esistenti (senza duplicati).`,
         [
           { text: 'Annulla', style: 'cancel' },
           {
             text: 'Importa', onPress: () => {
               importData(data);
-              Alert.alert('Importazione completata', 'I dati sono stati importati con successo.');
+              Alert.alert('Fatto', 'Dati importati con successo.');
             },
           },
         ]
       );
     } catch (e) {
-      Alert.alert('Errore', 'File non valido o corrotto. Assicurati di selezionare un backup di PsychSession.');
+      const msg = e instanceof Error ? e.message : String(e);
+      Alert.alert('Importazione fallita', msg);
     }
   }
 
   function handleResetDefaultTemplate() {
     Alert.alert(
       'Ripristina template standard',
-      'Verrà aggiunto un nuovo "Template Standard" con le voci aggiornate. I template esistenti non verranno eliminati.',
+      'Verrà aggiunto un nuovo "Template Standard" con le voci aggiornate. I template esistenti non saranno eliminati.',
       [
         { text: 'Annulla', style: 'cancel' },
         {
           text: 'Ripristina', onPress: () => {
-            const fresh = createDefaultTemplate();
-            addTemplate(fresh.name);
-            Alert.alert('Fatto', 'Template standard aggiunto con le voci aggiornate.');
+            addTemplate('Template Standard');
+            Alert.alert('Fatto', 'Template standard aggiunto.');
           },
         },
       ]
@@ -104,48 +105,83 @@ export default function SettingsScreen() {
   function handleICloud() {
     Alert.alert(
       'Sincronizzazione iCloud',
-      'La sincronizzazione iCloud sarà disponibile nella versione pubblicata dell\'app sull\'App Store. Usa l\'esportazione/importazione manuale come backup nel frattempo.',
+      'La sincronizzazione iCloud sarà disponibile nella versione pubblicata sull\'App Store. Usa l\'esportazione/importazione manuale come backup nel frattempo.',
       [{ text: 'OK' }]
     );
   }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, {
+        paddingTop: topPad + 12,
+        backgroundColor: colors.background,
+        borderBottomColor: colors.border,
+      }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>Impostazioni</Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 20 }]}
+        contentContainerStyle={[styles.content, {
+          paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 20,
+        }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Backup ed esportazione</Text>
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Importa</Text>
         <SettingRow
           icon="upload"
           label="Importa da file"
-          sub="Importa backup .json di PsychSession"
+          sub="Ripristina un backup .json di PsychSession"
           onPress={handleImport}
         />
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 20 }]}>Esporta</Text>
         <SettingRow
-          icon="download"
+          icon="database"
           label="Esporta tutto"
           sub={`${patients.length} pazienti · ${sessions.length} sedute · ${templates.length} template`}
           onPress={handleExportAll}
         />
         <SettingRow
           icon="layout"
-          label="Esporta template"
+          label="Esporta solo template"
           sub={`${templates.length} template`}
           onPress={handleExportTemplates}
         />
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 20 }]}>Esporta per paziente</Text>
+        {patients.length === 0 ? (
+          <View style={[styles.emptyPatients, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.emptyPatientsText, { color: colors.mutedForeground }]}>
+              Nessun paziente da esportare
+            </Text>
+          </View>
+        ) : (
+          patients.map(patient => {
+            const count = sessions.filter(s => s.patientId === patient.id).length;
+            return (
+              <SettingRow
+                key={patient.id}
+                icon="user"
+                label={patient.name}
+                sub={`${count} ${count === 1 ? 'seduta' : 'sedute'}`}
+                onPress={async () => {
+                  try {
+                    const { exportPatient } = await import('@/utils/export');
+                    await exportPatient(patient, sessions, templates);
+                  } catch (e) { showError(e); }
+                }}
+              />
+            );
+          })
+        )}
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 20 }]}>Avanzate</Text>
         <SettingRow
           icon="cloud"
           label="Sincronizzazione iCloud"
           sub="Disponibile nella versione App Store"
           onPress={handleICloud}
         />
-
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 24 }]}>Template</Text>
         <SettingRow
           icon="refresh-cw"
           label="Ripristina template standard"
@@ -153,8 +189,7 @@ export default function SettingsScreen() {
           onPress={handleResetDefaultTemplate}
         />
 
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 24 }]}>Riepilogo dati</Text>
-        <View style={[styles.statsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[styles.statsCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 20 }]}>
           {[
             { label: 'Pazienti', value: patients.length },
             { label: 'Sedute totali', value: sessions.length },
@@ -177,11 +212,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-  },
+  header: { paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: 1 },
   title: { fontSize: 28, fontFamily: 'Inter_700Bold' },
   content: { padding: 16, gap: 8 },
   sectionTitle: {
@@ -190,7 +221,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 4,
-    marginTop: 8,
     paddingHorizontal: 4,
   },
   row: {
@@ -205,9 +235,13 @@ const styles = StyleSheet.create({
   rowText: { flex: 1 },
   rowLabel: { fontSize: 15, fontFamily: 'Inter_500Medium' },
   rowSub: { fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 2 },
+  emptyPatients: {
+    padding: 16, borderRadius: 14, borderWidth: 1, alignItems: 'center',
+  },
+  emptyPatientsText: { fontSize: 14, fontFamily: 'Inter_400Regular' },
   statsCard: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   stat: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   statLabel: { fontSize: 14, fontFamily: 'Inter_400Regular' },
   statValue: { fontSize: 22, fontFamily: 'Inter_700Bold' },
-  footer: { fontSize: 12, fontFamily: 'Inter_400Regular', textAlign: 'center', marginTop: 24 },
+  footer: { fontSize: 12, fontFamily: 'Inter_400Regular', textAlign: 'center', marginTop: 8 },
 });
