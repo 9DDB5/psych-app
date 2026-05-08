@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "GFo-orjP-jFHiz6e977Hl"
+uri = "file://artifacts/psych-app/assets/images/icon.png"
+type = "image"
+title = "generated_image"
