@@ -18,7 +18,12 @@
     },
     "android": {},
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/icon.png",
+      "name": "PsychSession",
+      "shortName": "PsychSession",
+      "description": "Registrazione sedute psicologiche",
+      "themeColor": "#3B5BDB",
+      "backgroundColor": "#3B5BDB"
     },
     "plugins": [
       [
