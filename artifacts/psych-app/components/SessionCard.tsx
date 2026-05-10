@@ -1,16 +1,16 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { Session } from '@/types';
-import { formatSummary } from '@/utils/export';
 
 interface Props {
   session: Session;
   onPress: () => void;
+  onDelete?: () => void;
 }
 
-export function SessionCard({ session, onPress }: Props) {
+export function SessionCard({ session, onPress, onDelete }: Props) {
   const colors = useColors();
 
   const date = new Date(session.completedAt);
@@ -26,12 +26,23 @@ export function SessionCard({ session, onPress }: Props) {
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <View>
+        <View style={styles.dateBlock}>
           <Text style={[styles.date, { color: colors.foreground }]}>{dateStr}</Text>
           <Text style={[styles.time, { color: colors.mutedForeground }]}>{timeStr}</Text>
         </View>
-        <View style={[styles.badge, { backgroundColor: colors.muted }]}>
-          <Text style={[styles.badgeText, { color: colors.primary }]}>{totalSelected} voci</Text>
+        <View style={styles.headerRight}>
+          <View style={[styles.badge, { backgroundColor: colors.muted }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }]}>{totalSelected} voci</Text>
+          </View>
+          {onDelete && (
+            <Pressable
+              onPress={onDelete}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={({ pressed }) => [styles.deleteBtn, { opacity: pressed ? 0.5 : 1 }]}
+            >
+              <Feather name="trash-2" size={16} color={colors.destructive} />
+            </Pressable>
+          )}
         </View>
       </View>
       {session.freezingText ? (
@@ -62,6 +73,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  dateBlock: {
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   date: {
     fontSize: 15,
     fontFamily: 'Inter_600SemiBold',
@@ -79,6 +98,9 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
+  },
+  deleteBtn: {
+    padding: 4,
   },
   preview: {
     fontSize: 13,

@@ -75,6 +75,7 @@ export default function PatientsScreen() {
               patient={patient}
               sessionCount={getPatientSessions(patient.id).length}
               onPress={() => router.push(`/patient/${patient.id}`)}
+              onDelete={() => handleDelete(patient.id, patient.name)}
             />
           ))
         )}

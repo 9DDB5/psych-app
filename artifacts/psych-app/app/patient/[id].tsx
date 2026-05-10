@@ -19,7 +19,7 @@ export default function PatientDetailScreen() {
   const router = useRouter();
   const {
     patients, templates, sessions: allSessions,
-    getPatientSessions, updatePatient, deletePatient,
+    getPatientSessions, updatePatient, deletePatient, deleteSession,
   } = useAppContext();
 
   const patient = patients.find(p => p.id === id);
@@ -63,6 +63,13 @@ export default function PatientDetailScreen() {
       const msg = e instanceof Error ? e.message : String(e);
       Alert.alert('Esportazione fallita', msg);
     }
+  }
+
+  function handleDeleteSession(sessionId: string) {
+    Alert.alert('Elimina seduta', 'Eliminare questa seduta?', [
+      { text: 'Annulla', style: 'cancel' },
+      { text: 'Elimina', style: 'destructive', onPress: () => deleteSession(sessionId) },
+    ]);
   }
 
   function startSession() {
@@ -129,6 +136,7 @@ export default function PatientDetailScreen() {
               key={session.id}
               session={session}
               onPress={() => router.push(`/session/${session.id}`)}
+              onDelete={() => handleDeleteSession(session.id)}
             />
           ))
         )}

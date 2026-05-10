@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { Patient } from '@/types';
@@ -8,9 +8,10 @@ interface Props {
   patient: Patient;
   sessionCount: number;
   onPress: () => void;
+  onDelete?: () => void;
 }
 
-export function PatientCard({ patient, sessionCount, onPress }: Props) {
+export function PatientCard({ patient, sessionCount, onPress, onDelete }: Props) {
   const colors = useColors();
 
   const initials = patient.name
@@ -35,7 +36,17 @@ export function PatientCard({ patient, sessionCount, onPress }: Props) {
           {sessionCount} {sessionCount === 1 ? 'seduta' : 'sedute'}
         </Text>
       </View>
-      <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+      {onDelete ? (
+        <Pressable
+          onPress={onDelete}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={({ pressed }) => [styles.deleteBtn, { opacity: pressed ? 0.5 : 1 }]}
+        >
+          <Feather name="trash-2" size={18} color={colors.destructive} />
+        </Pressable>
+      ) : (
+        <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+      )}
     </TouchableOpacity>
   );
 }
@@ -70,5 +81,8 @@ const styles = StyleSheet.create({
   sub: {
     fontSize: 13,
     fontFamily: 'Inter_400Regular',
+  },
+  deleteBtn: {
+    padding: 4,
   },
 });
