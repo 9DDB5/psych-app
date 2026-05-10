@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,24 +8,19 @@ import { useColors } from '@/hooks/useColors';
 import { useAppContext } from '@/context/AppContext';
 import { TemplateCard } from '@/components/TemplateCard';
 import { EmptyState } from '@/components/EmptyState';
+import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 
 export default function TemplatesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { templates, addTemplate, deleteTemplate, duplicateTemplate } = useAppContext();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
   function handleAdd() {
     const t = addTemplate('Nuovo template');
     router.push(`/template/${t.id}`);
-  }
-
-  function handleDelete(id: string, name: string) {
-    Alert.alert('Elimina template', `Eliminare "${name}"?`, [
-      { text: 'Annulla', style: 'cancel' },
-      { text: 'Elimina', style: 'destructive', onPress: () => deleteTemplate(id) },
-    ]);
   }
 
   return (
@@ -50,12 +45,23 @@ export default function TemplatesScreen() {
               template={template}
               onPress={() => router.push(`/template/${template.id}`)}
               onDuplicate={() => duplicateTemplate(template.id)}
-              onDelete={() => handleDelete(template.id, template.name)}
+              onDelete={() => setDeleteTarget({ id: template.id, name: template.name })}
               canDelete={templates.length > 1}
             />
           ))
         )}
       </ScrollView>
+
+      <ConfirmDeleteModal
+        visible={deleteTarget !== null}
+        title="Elimina template"
+        message={`Eliminare il template "${deleteTarget?.name ?? ''}"?`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) deleteTemplate(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+      />
     </View>
   );
 }

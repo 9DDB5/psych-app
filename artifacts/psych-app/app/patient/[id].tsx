@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Alert, Modal, TextInput, Platform,
+  Modal, TextInput, Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { useAppContext } from '@/context/AppContext';
 import { SessionCard } from '@/components/SessionCard';
 import { EmptyState } from '@/components/EmptyState';
 import { exportPatient } from '@/utils/export';
+import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,6 +29,8 @@ export default function PatientDetailScreen() {
   const [editModal, setEditModal] = useState(false);
   const [editName, setEditName] = useState(patient?.name ?? '');
   const [editNotes, setEditNotes] = useState(patient?.notes ?? '');
+  const [showDeletePatient, setShowDeletePatient] = useState(false);
+  const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
 
   if (!patient) {
     return (
@@ -44,39 +47,17 @@ export default function PatientDetailScreen() {
     setEditModal(false);
   }
 
-  function handleDelete() {
-    Alert.alert('Elimina paziente', `Eliminare ${patient!.name} e tutte le sue sedute?`, [
-      { text: 'Annulla', style: 'cancel' },
-      {
-        text: 'Elimina', style: 'destructive', onPress: () => {
-          deletePatient(patient!.id);
-          router.back();
-        },
-      },
-    ]);
-  }
-
   async function handleExport() {
     try {
       await exportPatient(patient!, allSessions, templates);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      Alert.alert('Esportazione fallita', msg);
+      console.error('Export failed:', msg);
     }
-  }
-
-  function handleDeleteSession(sessionId: string) {
-    Alert.alert('Elimina seduta', 'Eliminare questa seduta?', [
-      { text: 'Annulla', style: 'cancel' },
-      { text: 'Elimina', style: 'destructive', onPress: () => deleteSession(sessionId) },
-    ]);
   }
 
   function startSession() {
-    if (templates.length === 0) {
-      Alert.alert('Nessun template', 'Crea prima un template nella sezione Template.');
-      return;
-    }
+    if (templates.length === 0) return;
     router.push({ pathname: '/session/new', params: { patientId: patient!.id } });
   }
 
@@ -96,7 +77,7 @@ export default function PatientDetailScreen() {
               >
                 <Feather name="edit-2" size={20} color={colors.primary} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleDelete} style={styles.headerBtn}>
+              <TouchableOpacity onPress={() => setShowDeletePatient(true)} style={styles.headerBtn}>
                 <Feather name="trash-2" size={20} color={colors.destructive} />
               </TouchableOpacity>
             </View>
@@ -136,11 +117,34 @@ export default function PatientDetailScreen() {
               key={session.id}
               session={session}
               onPress={() => router.push(`/session/${session.id}`)}
-              onDelete={() => handleDeleteSession(session.id)}
+              onDelete={() => setDeleteSessionId(session.id)}
             />
           ))
         )}
       </ScrollView>
+
+      <ConfirmDeleteModal
+        visible={showDeletePatient}
+        title="Elimina paziente"
+        message={`Eliminare ${patient.name} e tutte le sue sedute?`}
+        onCancel={() => setShowDeletePatient(false)}
+        onConfirm={() => {
+          setShowDeletePatient(false);
+          deletePatient(patient!.id);
+          router.back();
+        }}
+      />
+
+      <ConfirmDeleteModal
+        visible={deleteSessionId !== null}
+        title="Elimina seduta"
+        message="Eliminare questa seduta?"
+        onCancel={() => setDeleteSessionId(null)}
+        onConfirm={() => {
+          if (deleteSessionId) deleteSession(deleteSessionId);
+          setDeleteSessionId(null);
+        }}
+      />
 
       <Modal
         visible={editModal}

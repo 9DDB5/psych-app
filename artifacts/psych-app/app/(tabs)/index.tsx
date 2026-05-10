@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Alert, Modal, Platform,
+  TextInput, Modal, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAppContext } from '@/context/AppContext';
 import { PatientCard } from '@/components/PatientCard';
 import { EmptyState } from '@/components/EmptyState';
+import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 
 export default function PatientsScreen() {
   const colors = useColors();
@@ -20,6 +21,7 @@ export default function PatientsScreen() {
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newNotes, setNewNotes] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   function handleAdd() {
     const name = newName.trim();
@@ -28,17 +30,6 @@ export default function PatientsScreen() {
     setNewName('');
     setNewNotes('');
     setShowAdd(false);
-  }
-
-  function handleDelete(id: string, name: string) {
-    Alert.alert(
-      'Elimina paziente',
-      `Eliminare ${name} e tutte le sue sedute?`,
-      [
-        { text: 'Annulla', style: 'cancel' },
-        { text: 'Elimina', style: 'destructive', onPress: () => deletePatient(id) },
-      ]
-    );
   }
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
@@ -75,11 +66,22 @@ export default function PatientsScreen() {
               patient={patient}
               sessionCount={getPatientSessions(patient.id).length}
               onPress={() => router.push(`/patient/${patient.id}`)}
-              onDelete={() => handleDelete(patient.id, patient.name)}
+              onDelete={() => setDeleteTarget({ id: patient.id, name: patient.name })}
             />
           ))
         )}
       </ScrollView>
+
+      <ConfirmDeleteModal
+        visible={deleteTarget !== null}
+        title="Elimina paziente"
+        message={`Eliminare ${deleteTarget?.name ?? ''} e tutte le sue sedute?`}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) deletePatient(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+      />
 
       <Modal visible={showAdd} animationType="slide" presentationStyle="formSheet" onRequestClose={() => setShowAdd(false)}>
         <View style={[styles.modal, { backgroundColor: colors.background }]}>

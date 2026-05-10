@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useAppContext } from '@/context/AppContext';
-import { formatSummary } from '@/utils/export';
+import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 
 export default function SessionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,6 +15,7 @@ export default function SessionDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { sessions, patients, deleteSession, duplicateSession } = useAppContext();
+  const [showDelete, setShowDelete] = useState(false);
 
   const session = sessions.find(s => s.id === id);
   const patient = session ? patients.find(p => p.id === session.patientId) : undefined;
@@ -37,22 +38,8 @@ export default function SessionDetailScreen() {
   }
 
   function handleDuplicate() {
-    const copy = duplicateSession(session!.id);
-    if (copy) {
-      Alert.alert('Seduta duplicata', 'La seduta è stata duplicata con successo.', [{ text: 'OK' }]);
-    }
-  }
-
-  function handleDelete() {
-    Alert.alert('Elimina seduta', 'Eliminare questa seduta?', [
-      { text: 'Annulla', style: 'cancel' },
-      {
-        text: 'Elimina', style: 'destructive', onPress: () => {
-          deleteSession(session!.id);
-          router.back();
-        },
-      },
-    ]);
+    duplicateSession(session!.id);
+    router.back();
   }
 
   return (
@@ -68,7 +55,7 @@ export default function SessionDetailScreen() {
               <TouchableOpacity onPress={handleEdit} style={styles.headerBtn}>
                 <Feather name="edit-2" size={20} color={colors.primary} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleDelete} style={styles.headerBtn}>
+              <TouchableOpacity onPress={() => setShowDelete(true)} style={styles.headerBtn}>
                 <Feather name="trash-2" size={20} color={colors.destructive} />
               </TouchableOpacity>
             </View>
@@ -151,6 +138,18 @@ export default function SessionDetailScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <ConfirmDeleteModal
+        visible={showDelete}
+        title="Elimina seduta"
+        message="Eliminare questa seduta definitivamente?"
+        onCancel={() => setShowDelete(false)}
+        onConfirm={() => {
+          setShowDelete(false);
+          deleteSession(session!.id);
+          router.back();
+        }}
+      />
     </View>
   );
 }
