@@ -37,7 +37,7 @@ jobs:
 
       - name: Build web app
         working-directory: artifacts/psych-app
-        run: pnpm exec expo export --platform web --base-url /psych-app/
+        run: pnpm exec expo export --platform web
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
