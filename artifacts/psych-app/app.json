@@ -33,12 +33,12 @@
         }
       ],
       "expo-font",
-      "expo-web-browser",
-      "baseUrl": "/psych-app"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": true,
+      "baseUrl": "/psych-app"
     }
   }
 }
